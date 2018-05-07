@@ -23,3 +23,19 @@ and
 and 
     t1.`借贷` = 1
 '''
+#2.线下1、2类户在用状态的重复开立
+'''
+CREATE TABLE duplicate_personal_account_offline AS 
+(
+    SELECT 
+        t.`index` 
+    FROM
+        citic_bank.personal_account_second_offline t
+    WHERE
+        t.`状态` = '在用'
+    GROUP BY 
+        t.`客户名` , t.`证件号码` , t.`联系方式`
+    HAVING 
+        COUNT(1) > 1
+);
+'''
