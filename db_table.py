@@ -103,8 +103,18 @@ def import_pbc_company_account_log():
         df.to_sql('pbc_company_account_log',db_obj.engine,chunksize = 10240,if_exists='append')
     print 'finished'
 
+
+def import_pbc_account_system_status():
+    infile = r'/media/xudi/coding/支付/深圳中信/5.7/运营管理部/单位结算账户信息(账户管理系统）/开户_20180505_汇总.xls'
+    df = pd.read_excel(infile,encoding = 'utf8',index_col = None)
+    df.columns = [ i.strip() for i in df.columns]
+    print df.columns
+    db_obj = CiticBank()
+    df.to_sql('pbc_account_system_status',db_obj.engine,chunksize = 10240,if_exists='append')
+    print 'finished'
+    
+    
 if __name__ == '__main__':
-    import_citic_company_account()
-#     import_pbc_company_account_log()
+    import_pbc_account_system_status()
     
     

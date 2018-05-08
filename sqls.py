@@ -109,3 +109,24 @@ and
 order by 
     `开户日期`
 '''
+#基本户核准
+'''
+create table jibenhu_hezhun as
+select
+    t2.*,
+    t3.`开户许可证核准号` as '人行开户许可证核准号'
+from 
+(
+SELECT * FROM citic_bank.citic_company_account
+where `账户性质` = '基本存款账户'
+and `状态` = '正常'
+) as t2 
+left join 
+(
+select * from pbc_account_system_status 
+where `账户性质` = '基本存款账户'
+and `状态` = '正常'
+)as t3
+on 
+    t2.`账号` = t3.`账号`
+'''
