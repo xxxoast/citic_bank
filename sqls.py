@@ -44,7 +44,7 @@ CREATE TABLE duplicate_personal_account_offline AS
         COUNT(1) > 1
 );
 '''
-#3.details
+#3.线下1、2类户在用状态的重复开立明细情况
 '''
 CREATE TABLE duplicate_personal_account_offline_details AS 
 SELECT 
@@ -60,7 +60,7 @@ AND
 AND
     t1.`联系方式` = t2.`联系方式`
 '''
-#日期格式转换
+#4.线下1、2类户在用状态的重复开立明细情况日期格式转换
 '''
 SELECT 
     *
@@ -71,7 +71,7 @@ WHERE
 AND 
     t.`客户等级代码` = 1
 '''
-#支付机构余额排序
+#5.支付机构余额排序
 '''
 select 
     a.`户名`,max(a.`账户余额`) as '最大余额'
@@ -81,7 +81,7 @@ from
 group by a.`账户`
 order by max(a.`账户余额`)
 '''
-#一般户未备案
+#6.一般户未备案，用备案log不准确 
 '''
 create table yibanhu_diff as
 select
@@ -96,6 +96,20 @@ left join citic_bank.pbc_company_account_log t3
 on 
     t2.`账号` = t3.`账号`
 '''
+'''
+SELECT 
+    *,
+    datediff(`备案日期`,`开户日期`) 
+FROM
+    citic_bank.yibanhu_diff
+WHERE
+    `状态` = '正常'
+and
+    isnull(`备案日期`)
+order by 
+    `开户日期`
+'''
+#准确方式
 '''
 SELECT 
     *
@@ -118,20 +132,7 @@ FROM
     pbc_account_system_status
 )
 '''
-'''
-SELECT 
-    *,
-    datediff(`备案日期`,`开户日期`) 
-FROM
-    citic_bank.yibanhu_diff
-WHERE
-    `状态` = '正常'
-and
-    isnull(`备案日期`)
-order by 
-    `开户日期`
-'''
-#基本户核准
+#7.基本户核准
 '''
 create table jibenhu_hezhun as
 select
@@ -152,7 +153,7 @@ and `状态` = '正常'
 on 
     t2.`账号` = t3.`账号`
 '''
-#撤销账户信息
+#8.撤销账户信息
 '''
 create table delete_exceed_limit as
 (
@@ -168,13 +169,24 @@ LEFT JOIN
     citic_bank.pbc_account_delete_status t2 ON cast(t3.`客户账号` as char(32)) =  cast(t2.`账号` as char(32))
 )
 '''
-#改变数据类型
+#9.改变数据类型
 '''
 alter table pbc_account_system_status
 modify column `账号` 
 varchar(64);
 '''
-#加索引 
+#10.加索引 
 '''
 create index account_number_index on pbc_account_system_status (`账号`) ;
+'''
+#11.销户未报备
+'''
+SELECT *,datediff(`人行销户日期`,`销户日期`) as '延迟报备时间' FROM citic_bank.delete_exceed_limit
+where isnull(`人行销户日期`)
+'''
+#12.销户延迟报备
+'''
+SELECT *,datediff(`人行销户日期`,`销户日期`) as '延迟报备时间' FROM citic_bank.delete_exceed_limit
+where datediff(`人行销户日期`,`销户日期`) > 10
+order by datediff(`人行销户日期`,`销户日期`) asc
 '''

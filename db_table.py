@@ -1,15 +1,29 @@
 # -*- coding:utf-8 -*- 
 import sys
+from bcolz.ctable import cols
 if '..' not in sys.path:
     sys.path.append('..')
 from future_mysql.dbBase import DB_BASE
 
-from sqlalchemy import Column, Integer, String, DateTime, Numeric, Index, Float
+from sqlalchemy import Column, Integer, String, DateTime, Numeric, Index, Float, NVARCHAR, BigInteger
 from sqlalchemy import Table
-
+import os
 import pandas as pd
 
 trans = lambda x: x.encode('utf8') if isinstance(x,unicode) else x
+
+def mapping_df_types(df): 
+    dtypedict = {} 
+    for i, j in zip(df.columns, df.dtypes): 
+        if i == u'账户':
+            dtypedict.update({i: NVARCHAR(length=32)}) 
+#         if "object" in str(j): 
+#             dtypedict.update({i: NVARCHAR(length=255)}) 
+#         if "float" in str(j): 
+#             dtypedict.update({i: Float(precision=2, asdecimal=True)})
+#         if "int" in str(j): 
+#             dtypedict.update({i: Integer()}) 
+    return dtypedict
 
 class CiticBank(DB_BASE):
 
@@ -43,15 +57,44 @@ class CiticBank(DB_BASE):
     def get_col_sizes(self):
         return self.col_sizes
 
-def import_core(infile,table_name):
-    if infile.endswith('.csv'):
-        df = pd.read_csv(infile,encoding = 'utf8',index_col = None)
+class reserve_trade_all(CiticBank):
+    
+    def __init__(self, db_name='citic_bank', table_name='reserve_trade_all'):
+        super(reserve_trade_all, self).__init__(db_name)
+        self.table_struct = None
+        if table_name is not None:
+            self.table_name = table_name
+            self.table_struct = Table(
+                table_name, self.meta,
+                #
+                Column('index',Integer,primary_key = True,autoincrement=True),
+                Column('citic_custom_id',Integer),
+                Column('origin_account_number', String(32),index = True),
+                Column('origin_account_name', String(128)),
+                Column('trade_id',Integer),
+                Column('date', String(32)),
+                Column('timestamp', String(40)),
+                #
+                Column('operation_id',String(32)),
+                Column('direction',String(6)),
+                Column('turnover',Float),
+                Column('residual',Float),
+                Column('opponent_account_number', String(32),index = True),
+                Column('opponent_account_name', String(64)),
+                Column('opponent_bank_name', String(128)),
+                Column('abstract',String(128)),
+            )
+
+def import_core(infile,table_name,encoding = 'utf8',if_exists='append'):
+    if infile.endswith('.csv') or infile.endswith('.txt'):
+        df = pd.read_csv(infile,encoding = encoding,index_col = None)
     else:
-        df = pd.read_excel(infile,encoding = 'utf8',index_col = None)
+        df = pd.read_excel(infile,encoding = encoding,index_col = None,nrows = 1000)
     df.columns = [ i.strip() for i in df.columns]
     print df.columns
     db_obj = CiticBank()
-    df.to_sql(table_name,db_obj.engine,chunksize = 10240,if_exists='append')
+    dtypedict = mapping_df_types(df)
+    df.to_sql(table_name,db_obj.engine,chunksize = 10240,if_exists=if_exists,dtype=dtypedict)
     print 'finished'
 
 def import_reserve():
@@ -108,9 +151,30 @@ def import_pbc_banck_delete_status():
     infile = r'/media/xudi/coding/支付/深圳中信/5.8/早上/单位结算账户信息(账户管理系统）/销户20180505_汇总.xls'
     table_name = r'pbc_account_delete_status'
     import_core(infile,table_name)
-    
+   
+def import_reserve_trade_all():   
+    root_path = r'/media/xudi/coding/支付/深圳中信/5.8/中午/支付机构备付金交易流水20160503-20180503'
+    csvs = [ i for i in os.listdir(root_path) if i.endswith('.txt') ]
+    dbapi = reserve_trade_all()
+    dbapi.create_table()
+    cols = dbapi.get_col_names()
+    for infile in csvs:
+        print infile
+        df = pd.read_csv(os.path.join(root_path,infile),encoding = 'cp936',index_col = None)
+        df.columns = cols[1:]
+        df.to_sql(dbapi.table_name,dbapi.engine,if_exists='append',chunksize=10240,index = False) 
+        
+def import_cross_validation_1():   
+    table_name = r'cross_validation'
+    infile = r'/media/xudi/coding/支付/深圳中信/5.9/联网核查记录/20171101-20180228联网核查记录（new）.csv'
+    import_core(infile,table_name,encoding = 'utf8')        
+ 
+def import_cross_validation_2():   
+    table_name = r'cross_validation_2018'
+    infile = r'/media/xudi/coding/支付/深圳中信/5.9/联网核查记录/20180301-20180507联网核查记录（new）.csv'
+    import_core(infile,table_name,encoding = 'utf8')     
+          
 if __name__ == '__main__':
-    import_pbc_banck_change_status()
-    import_pbc_banck_delete_status()
+    import_reserve_trade_all()
     
     
