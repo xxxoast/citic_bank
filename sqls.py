@@ -98,6 +98,28 @@ on
 '''
 '''
 SELECT 
+    *
+FROM
+(
+SELECT 
+    *
+FROM
+    citic_bank.citic_company_account t
+WHERE
+    t.`状态` = '正常'
+)AS t1
+WHERE
+t1.`账号` 
+NOT IN 
+(
+SELECT 
+    `账号`
+FROM
+    pbc_account_system_status
+)
+'''
+'''
+SELECT 
     *,
     datediff(`备案日期`,`开户日期`) 
 FROM
@@ -129,4 +151,30 @@ and `状态` = '正常'
 )as t3
 on 
     t2.`账号` = t3.`账号`
+'''
+#撤销账户信息
+'''
+create table delete_exceed_limit as
+(
+SELECT 
+    t3.*, t2.`销户日期` AS '人行销户日期'
+FROM
+(
+    select * from 
+    citic_bank.citic_account_delete_status t1
+    where t1.`状态` = '销户'
+) as t3
+LEFT JOIN
+    citic_bank.pbc_account_delete_status t2 ON cast(t3.`客户账号` as char(32)) =  cast(t2.`账号` as char(32))
+)
+'''
+#改变数据类型
+'''
+alter table pbc_account_system_status
+modify column `账号` 
+varchar(64);
+'''
+#加索引 
+'''
+create index account_number_index on pbc_account_system_status (`账号`) ;
 '''
