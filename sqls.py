@@ -274,10 +274,14 @@ on t2.last_trade_index = t1.`index`
 (
 SELECT 
     t1.`date` as 'date',
-    t1.`total_turnover` as 'credit_turnover',
+    cast(round(t1.`total_turnover`) as SIGNED) as 'credit_turnover',
     t1.`trade_count` as 'credit_trade_count',
-    t2.`total_turnover` as 'debt_turnover',
-    t2.`trade_count` as 'debt_trade_count'
+    cast(round(t1.residual) as SIGNED) as 'credit residual',
+    t1.`timestamp` as 'credit last timestamp',
+    cast(round(t2.`total_turnover`) as SIGNED) as 'debt_turnover',
+    t2.`trade_count` as 'debt_trade_count',
+    cast(round(t2.residual) as SIGNED) as 'debt residual',
+    t2.`timestamp` as 'debt last timestamp'
 FROM
     citic_bank.tmp_ainongyizhan_everyday_credit_summary t1
 left join
@@ -288,11 +292,15 @@ on
 union
 (
 SELECT 
-    t1.`date` as 'date',
-    t1.`total_turnover` as 'credit_turnover',
+    t2.`date` as 'date',
+    cast(round(t1.`total_turnover`) as SIGNED) as 'credit_turnover',
     t1.`trade_count` as 'credit_trade_count',
-    t2.`total_turnover` as 'debt_turnover',
-    t2.`trade_count` as 'debt_trade_count'
+    cast(round(t1.residual) as SIGNED) as 'credit residual',
+    t1.`timestamp` as 'credit last timestamp',
+    cast(round(t2.`total_turnover`) as SIGNED) as 'debt_turnover',
+    t2.`trade_count` as 'debt_trade_count',
+    cast(round(t2.residual) as SIGNED) as 'debt residual',
+    t2.`timestamp` as 'debt last timestamp'
 FROM
     citic_bank.tmp_ainongyizhan_everyday_credit_summary t1
 right join
@@ -300,5 +308,9 @@ right join
 on 
     t1.`date` = t2.`date`
 )
+order by `date` asc
+    
+
+    
 
     
