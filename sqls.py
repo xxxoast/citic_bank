@@ -296,7 +296,7 @@ SELECT
     cast(round(t1.`total_turnover`) as SIGNED) as 'credit_turnover',
     t1.`trade_count` as 'credit_trade_count',
     cast(round(t1.residual) as SIGNED) as 'credit residual',
-    t1.`timestamp` as 'credit last timestamp',
+    t1.`timestamp` as 'credit_last_timestamp',
     cast(round(t2.`total_turnover`) as SIGNED) as 'debt_turnover',
     t2.`trade_count` as 'debt_trade_count',
     cast(round(t2.residual) as SIGNED) as 'debt residual',
