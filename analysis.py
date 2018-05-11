@@ -2,6 +2,7 @@
 
 from db_table import CiticBank
 import pandas as pd
+import matplotlib.pyplot as plt
 
 def date_trans(x):
     if x is not None:
@@ -12,7 +13,7 @@ def date_trans(x):
         return hour*10000 + min*100 + sec
     return x
     
-def ainongyizhan_analysis():
+def ainongyizhan_generator():
     table_name = 'tmp_ainongyizhan_everyday_summary'
     dbapi = CiticBank()
     df = pd.read_sql_table(table_name,dbapi.engine)
@@ -22,16 +23,36 @@ def ainongyizhan_analysis():
     df[df.columns[1:]] = df[df.columns[1:]].astype(int)
     df['residual_of_day'] = -1
     df['residual_timestamp'] = -1
-    tstamp_diff = (df['credit_last_timestamp'] - df['debt_last_timestamp']).apply(lambda x:8 if x < 0 else 4)
+    df['redisual_last_trade_index'] = -1
+    tstamp_diff = (df['credit_last_trade_index'] - df['debt_last_trade_index']).apply(lambda x:8 if x < 0 else 4)
     credit_index = tstamp_diff.apply(lambda x:x == 4)
     debt_index = tstamp_diff.apply(lambda x:x == 8)
     df.loc[credit_index,'residual_timestamp'] = df.loc[credit_index,'credit_last_timestamp']
     df.loc[debt_index,'residual_timestamp'] = df.loc[debt_index,'debt_last_timestamp']
+    df.loc[credit_index,'redisual_last_trade_index'] = df.loc[credit_index,'credit_last_trade_index']
+    df.loc[debt_index,'redisual_last_trade_index'] = df.loc[debt_index,'debt_last_trade_index']
     df.loc[credit_index,'residual_of_day'] = df.loc[credit_index,'credit_residual']
     df.loc[debt_index,'residual_of_day'] = df.loc[debt_index,'debt_residual']
+    df['net_out_amount'] = df['credit_turnover'] - df['debt_turnover']
+    df['expected_residual'] = -1
+    df['expected_residual'].values[1:] = df['residual_of_day'].values[:-1] - df['net_out_amount'].values[1:]
+    df['expected_residual'].values[0] = df['residual_of_day'].values[0]
     df.to_sql('tmp_ainongyizhan_everyday_summary_processed',dbapi.engine)
+    df['expected_residual'].cumsum().plot()
+    df['residual_of_day'].cumsum().plot()
+    plt.show()
     print 'finished'
 
+def ainongyizhan_analysis():
+    table_name = 'tmp_ainongyizhan_everyday_summary_processed'
+    dbapi = CiticBank()
+    df = pd.read_sql_table(table_name,dbapi.engine)
+    diff = ( df['expected_residual'].cumsum() - df['residual_of_day'].cumsum())
+    diff.index = df['date']
+    diff.plot()
+    plt.show()
+
 if __name__ == '__main__':
+    ainongyizhan_generator()
     ainongyizhan_analysis()
     

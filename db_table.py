@@ -89,7 +89,7 @@ def import_core(infile,table_name,encoding = 'utf8',if_exists='append'):
     if infile.endswith('.csv') or infile.endswith('.txt'):
         df = pd.read_csv(infile,encoding = encoding,index_col = None)
     else:
-        df = pd.read_excel(infile,encoding = encoding,index_col = None,nrows = 1000)
+        df = pd.read_excel(infile,encoding = encoding,index_col = None)
     df.columns = [ i.strip() for i in df.columns]
     print df.columns
     db_obj = CiticBank()
