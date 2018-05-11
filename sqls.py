@@ -190,6 +190,19 @@ SELECT *,datediff(`人行销户日期`,`销户日期`) as '延迟报备时间' F
 where datediff(`人行销户日期`,`销户日期`) > 10
 order by datediff(`人行销户日期`,`销户日期`) asc
 
+#分离借贷
+create table reserve_trade_all_credit as
+select * from reserve_trade_all t
+where cast(t.`direction` as unsigned) = 1;
+
+create table reserve_trade_all_debt as
+select * from reserve_trade_all t
+where cast(t.`direction` as unsigned) = 2; 
+
+
+create index reserve_trade_all_credit_account_index on reserve_trade_all_credit(`origin_account_number`);
+create index reserve_trade_all_debt_account_index on reserve_trade_all_debt(`origin_account_number`);
+
 #13.出金账号、金额透视表
 create table tmp_credit_account_amount as 
 SELECT  t.origin_account_number as '出金账号',
@@ -197,6 +210,11 @@ SELECT  t.origin_account_number as '出金账号',
 FROM citic_bank.reserve_trade_all_credit t
 group by t.origin_account_number;
 
+create table tmp_debt_account_amount as 
+SELECT  t.origin_account_number as '入金账号',
+        sum(t.turnover) as '入金总额'
+FROM citic_bank.reserve_trade_all_debt t
+group by t.origin_account_number;
 #14.备付金流水，出入金统计
 SELECT
     t1.`出金账号` as '账号',
@@ -315,7 +333,7 @@ on
     t1.`date` = t2.`date`
 )
 order by `date` asc
-    
+
 
     
 

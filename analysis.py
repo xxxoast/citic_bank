@@ -13,10 +13,9 @@ def date_trans(x):
         return hour*10000 + min*100 + sec
     return x
     
-def ainongyizhan_generator():
-    table_name = 'tmp_ainongyizhan_everyday_summary'
+def processed_table_generator(in_table_name,out_table_name):
     dbapi = CiticBank()
-    df = pd.read_sql_table(table_name,dbapi.engine)
+    df = pd.read_sql_table(in_table_name,dbapi.engine)
     df['credit_last_timestamp'] = df['credit_last_timestamp'].apply(date_trans)
     df['debt_last_timestamp'] = df['debt_last_timestamp'].apply(date_trans)
     df = df.fillna(0)
@@ -37,7 +36,7 @@ def ainongyizhan_generator():
     df['expected_residual'] = -1
     df['expected_residual'].values[1:] = df['residual_of_day'].values[:-1] - df['net_out_amount'].values[1:]
     df['expected_residual'].values[0] = df['residual_of_day'].values[0]
-    df.to_sql('tmp_ainongyizhan_everyday_summary_processed',dbapi.engine)
+    df.to_sql(out_table_name,dbapi.engine)
     df['expected_residual'].cumsum().plot()
     df['residual_of_day'].cumsum().plot()
     plt.show()
@@ -53,6 +52,8 @@ def ainongyizhan_analysis():
     plt.show()
 
 if __name__ == '__main__':
-    ainongyizhan_generator()
-    ainongyizhan_analysis()
+    corpname = 'yinsheng'
+    in_table_name = 'tmp_{}_everyday_summary'.format(corpname)
+    out_table_name = 'tmp_{}_everyday_summary_processed'.format(corpname)
+    processed_table_generator(in_table_name,out_table_name)
     
