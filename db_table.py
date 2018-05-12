@@ -173,8 +173,17 @@ def import_cross_validation_2():
     table_name = r'cross_validation_2018'
     infile = r'/media/xudi/coding/支付/深圳中信/5.9/联网核查记录/20180301-20180507联网核查记录（new）.csv'
     import_core(infile,table_name,encoding = 'utf8')     
+       
+def import_273():
+    root_dir = r'/media/xudi/coding/支付/深圳中信/5.11/代收付/273流水'
+    xlss = [i for i in os.listdir(root_dir) if i.endswith('xlsx')]       
+    table_name = r'273_trade'
+    for xls in xlss:
+        print xls
+        infile = os.path.join(root_dir,xls)
+        import_core(infile,table_name)
           
 if __name__ == '__main__':
-    import_reserve_trade_all()
+    import_273()
     
     
