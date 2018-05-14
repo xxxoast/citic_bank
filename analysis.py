@@ -2,6 +2,7 @@
 
 from db_table import CiticBank
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 
 def date_trans(x):
@@ -51,9 +52,25 @@ def ainongyizhan_analysis():
     diff.plot()
     plt.show()
 
-if __name__ == '__main__':
-    corpname = 'yinsheng'
+def linminlong():
+    table_name = '273_trade'
+    dbapi = CiticBank()
+    df = pd.read_sql_table(table_name,dbapi.engine)
+    print len(df)
+    df[u'交易时间'] = df[u'交易时间'].apply(date_trans).apply(int)
+    df[u'weekday'] = df[u'交易日期'].apply(pd.to_datetime).apply(lambda x:x.weekday()).astype(np.int)
+    tobechecked = np.logical_and( (df[u'交易时间'] < 170000 ) ,  (df[u'交易时间'] > 90000) )
+    tobechecked = np.logical_and( df[u'weekday'] < 5, tobechecked )
+    df = df.loc[ tobechecked ]
+    print len(df)
+    df.to_sql('273_trade_special',dbapi.engine,if_exists = 'fail')
+    
+def corp_dialy():
+    corpname = 'zhongfu'
     in_table_name = 'tmp_{}_everyday_summary'.format(corpname)
     out_table_name = 'tmp_{}_everyday_summary_processed'.format(corpname)
     processed_table_generator(in_table_name,out_table_name)
+
+if __name__ == '__main__':
+    corp_dialy()
     
