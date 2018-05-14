@@ -218,14 +218,14 @@ group by t.origin_account_number;
 #14.备付金流水，出入金统计
 SELECT
     t1.`出金账号` as '账号',
-    t1.`出金总额`,
-    t2.`入金总额`,
+    cast(round(t1.`出金总额` / 10000) as SIGNED) as '出金总额（万）',
+    cast(round(t2.`入金总额` / 10000) as SIGNED) as '入金总额（万）',
+    (t1.`出金总额` - t2.`入金总额`) as '期限内净出金总额',
     t3.account_name,
     t3.partner,
     t3.delegator,
     t3.account_branch,
-    t3.account_type,
-    (t1.`出金总额` - t2.`入金总额`) as '期限内净出金总额'
+    t3.account_type
 FROM citic_bank.tmp_credit_account_amount t1
 left join
     citic_bank.tmp_debt_account_amount t2
@@ -236,7 +236,7 @@ left join
 on
     t1.`出金账号` = t3.`account_number`
 order by 
-    t1.`出金总额`
+    t1.`出金总额` desc;
 # 出入金差额
 SELECT
     t1.`出金账号` as '账号',
