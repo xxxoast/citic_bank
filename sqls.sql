@@ -333,7 +333,26 @@ on
     t1.`date` = t2.`date`
 )
 order by `date` asc
-
+##############################################################
+#看每个支付机构日均存款情况
+select 
+    origin_account_number,
+    origin_account_name,
+    cast(avg(residual) as unsigned)
+from 
+(
+SELECT origin_account_number,
+       `date`,
+        max(`index`),
+        residual,
+        origin_account_name
+FROM 
+        citic_bank.reserve_trade_all
+group by origin_account_number,
+        `date`
+) as t
+group by origin_account_number
+order by avg(residual) desc
 
     
 

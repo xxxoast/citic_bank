@@ -27,7 +27,7 @@ def mapping_df_types(df):
 
 class CiticBank(DB_BASE):
 
-    def __init__(self, db_name='citic_bank', table_name=None):
+    def __init__(self, db_name='citic_bank_tmp', table_name=None):
         super(CiticBank, self).__init__(db_name)
         self.table_struct = None
         self.col_sizes = []
