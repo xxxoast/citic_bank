@@ -66,7 +66,7 @@ def linminlong():
     df.to_sql('273_trade_special',dbapi.engine,if_exists = 'fail')
     
 def corp_dialy():
-    corpname = 'leshua'
+    corpname = 'kayou'
     in_table_name = 'tmp_{}_everyday_summary'.format(corpname)
     out_table_name = 'tmp_{}_everyday_summary_processed'.format(corpname)
     processed_table_generator(in_table_name,out_table_name)

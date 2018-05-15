@@ -335,24 +335,31 @@ on
 order by `date` asc
 ##############################################################
 #看每个支付机构日均存款情况
-select 
-    origin_account_number,
-    origin_account_name,
-    cast(avg(residual) as unsigned)
-from 
-(
-SELECT origin_account_number,
+create table every_account_every_day_last_trade as
+select origin_account_number,
        `date`,
         max(`index`),
-        residual,
         origin_account_name
-FROM 
-        citic_bank.reserve_trade_all
-group by origin_account_number,
-        `date`
-) as t
-group by origin_account_number
-order by avg(residual) desc
+from 
+	citic_bank.reserve_trade_all
+group by 
+	origin_account_number,
+    `date`
+;
+
+select  t1.origin_account_number,
+		t1.`date`,
+        t1.origin_account_name,
+        t2.residual,
+        t2.`index`
+from 
+		citic_bank.every_account_every_day_last_trade t1,
+        citic_bank.reserve_trade_all t2
+where 
+		t1.`index` = t2.`index`
+;
+#更改列名
+alter table every_account_every_day_last_trade change column `max(``index``)` `index` int(11)
 
     
 
