@@ -71,6 +71,21 @@ def corp_dialy():
     out_table_name = 'tmp_{}_everyday_summary_processed'.format(corpname)
     processed_table_generator(in_table_name,out_table_name)
 
+
+def different_reserve_inter_bank():
+    import re
+    keywords = [ re.compile(i) for i in [ur'\(',ur'\)',ur'（',ur'）',ur'客户备付金',ur'备付金',ur'有限公司',ur'公司',ur'股份']]
+    def re_replace(x):
+        for keyword in keywords:
+            x = keyword.sub('',x)
+        return x
+    dbapi = CiticBank('citic_bank_proof')
+    df = pd.read_sql_table('tmp_different_reserve_inter_bank_credit',dbapi.engine)
+    df['origin_account_name'] = df['origin_account_name'].apply(re_replace)
+    df['opponent_account_name'] = df['opponent_account_name'].apply(re_replace)
+    diff_index = df['origin_account_name'] != df['opponent_account_name']
+    print df.loc[diff_index][['origin_account_name','opponent_account_name']]
+    
 if __name__ == '__main__':
-    corp_dialy()
+    different_reserve_inter_bank()
     
