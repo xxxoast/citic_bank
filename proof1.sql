@@ -7,7 +7,7 @@ from
 select  t1.origin_account_number,
 		t1.`date`,
         t1.origin_account_name,
-        cast(t2.residual as unsigned) as redisual,
+        t2.residual as residual,
         t2.`index`
 from 
 		citic_bank.every_account_every_day_last_trade t1,
@@ -16,7 +16,7 @@ where
 		t1.`index` = t2.`index`
 ) as t3
 left join citic_bank.reserve t4
-on t3.origin_account_number = t4.account_number
+on t3.origin_account_number = t4.account_number;
 #2筛选汇缴户&日终未清0明细
 create table citic_bank_proof.reserve_residual_every_day_detail as  
 SELECT * FROM citic_bank_proof.reserve_residual_every_day 

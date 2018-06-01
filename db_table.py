@@ -182,8 +182,38 @@ def import_273():
         print xls
         infile = os.path.join(root_dir,xls)
         import_core(infile,table_name)
-          
+
+#test 
+def import_clean():
+    infile = r'/media/xudi/coding/支付/其他/反洗钱/附件.csv'
+    root_path = r'/media/xudi/coding/支付/其他/反洗钱/everyone'
+    lines = []
+    new_sheet,current_name = False,None
+    everyone = {}
+    with open(infile) as fin:
+        for line in fin:
+            fields = [ i for i in line.split(',') if len(i.strip()) > 0]
+            if len(fields) == 0:
+                if new_sheet is False:
+                    continue
+                if new_sheet is True:
+                    print current_name
+                    new_sheet = False
+                    everyone[current_name] = lines
+                    lines = []
+            elif len(fields) > 0 and new_sheet is True:
+                lines.append(line)
+            elif len(fields) > 0 and new_sheet is False:
+                current_name = fields[0]
+                new_sheet = True
+    for k,v in everyone.iteritems():
+        k = k.split(')')[1]
+        des_path = os.path.join(root_path,k + '.csv')
+        with open(des_path,'w') as fout:
+            for line in v:
+                fout.write(line)
+
 if __name__ == '__main__':
-    import_273()
+    import_clean()
     
     
